@@ -33,3 +33,13 @@ class Condition(models.Model):
     # description = models.TextField(null=True, blank=True)
     # diagnosed_on = models.DateField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    
+class CVDPrediction(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="CVDPrediction")
+    probability = models.FloatField(null = True,blank = True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    
+    
+
+   
