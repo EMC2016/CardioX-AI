@@ -62,85 +62,8 @@ def save_to_database(data):
                         condition = category,
                         clinical_status = entry["clinicalStatus"].get("coding")[0].get("code");
                         timestamp = entry["onsetDateTime"]
-                    )
-                    
-                    
-
-                    
-                
+                    )    
     
-
-def extract_json_data_chronological(data):
-    # Extracting values and timestamps from the "prefetch" section
-    extracted_data = []
-    prefetch = data.get("prefetch", {})
-    patient_id = prefetch.get("patient", {}).get("id")
-    
-
-    # Define attributes for time-series data
-    attributes = {
-        'bmi': "39156-5",
-        'fasting_glucose': "2339-0",
-        'hdl': "2085-9",
-        'triglycerides': "2571-8",
-        'hba1c': "4548-4",
-        'serum_creatinine': "2160-0",
-        'alt': "1742-6",
-        'ast': "1920-8",
-    }
-
-    # Store single values for age, gender, and hypertension
-
-    # Loop through prefetch data
-    for category, details in prefetch.items():
-        if isinstance(details, dict) and "entry" in details:
-            for entry in details["entry"]:
-                resource = entry.get("resource", {})
-                timestamp = resource.get("effectiveDateTime") or resource.get("onsetDateTime") or resource.get("recordedDate")
-                value = None
-                unit = ""
-
-                if "valueQuantity" in resource:
-                    value = resource["valueQuantity"]["value"]
-                    unit = resource["valueQuantity"].get("unit", "")
-                elif "valueCodeableConcept" in resource:
-                    value = resource["valueCodeableConcept"]["text"]
-
-
-
-                # Store time-series attributes
-                if timestamp and value is not None:
-                    for attr_name, code in attributes.items():
-                        if code in details.get("resourceType", "") or code in resource.get("code", {}).get("coding", [{}])[0].get("code", ""):
-                            extracted_data.append({
-                                "Patient ID": patient_id,
-                                "Category": attr_name,
-                                "Timestamp": timestamp,
-                                "Value": value,
-                                "Unit": unit
-                            })
-
-    # Convert to DataFrame
-    df_extracted = pd.DataFrame(extracted_data)
-
-    # Save single-value patient info separately
-    
-
-    # Save to CSV
-    csv_filename_values = f"/Users/qingxiaochen/Documents/Program/Hackathon/MedAI/meldrx_app/medlrx_project/vite_app/src/assets/extracted_data_{patient_id}.csv"
-
-    df_extracted.to_csv(csv_filename_values, index=False)
-
-    print(f"Chronological data saved to {csv_filename_values}")
-
-    # Save raw prefetch data for debugging
-    with open("prefetch_data.json", "w") as json_file:
-        json.dump(data, json_file, indent=4)
-
-    return df_extracted
-
-
-
 
 
 def extract_observation_value(entry):
