@@ -3,16 +3,32 @@ from django.db import models
 class Patient(models.Model):
     id = models.CharField(max_length=100, primary_key=True)
     gender = models.CharField(max_length=20, null=True, blank=True)
-    age = models.IntegerField(null=True, blank=True)
+    birthDate = models.DateField(null=True, blank=True)
     familyName = models.CharField(max_length=20, null=True, blank=True)
-    givenName = models.CharField(max_length=20,null = True, blank = True)
+    givenName = models.CharField(max_length=50,null = True, blank = True)
 
-class Observation(models.Model):
+
+# The observation values are digits.
+class Observation_Quantity(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="observations")
     observation = models.CharField(max_length=50)  
     value = models.FloatField(null=True, blank=True)  # Numeric values like BMI, glucose, etc.
     unit = models.CharField(max_length=20, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ["timestamp"] 
+
+# The observation values are texts.
+class Observation_Concept(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="observations")
+    observation = models.CharField(max_length=50)  
+    value = models.CharField(max_length=50, null=True, blank=True)  # Numeric values like BMI, glucose, etc.
+    # unit = models.CharField(max_length=20, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ["timestamp"] 
 
 class Condition(models.Model):
     CLINICAL_STATUS_CHOICES = [
@@ -34,11 +50,18 @@ class Condition(models.Model):
     # diagnosed_on = models.DateField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     
+    class Meta:
+        ordering = ["timestamp"] 
+    
 class CVDPrediction(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="CVDPrediction")
     probability = models.FloatField(null = True,blank = True)
+    model_version = models.CharField(max_length=50, null=True, blank=True)  # Version of ML model used
+    explanation = models.TextField(null=True, blank=True)  # Explanation of the prediction
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["timestamp"]
     
     
 

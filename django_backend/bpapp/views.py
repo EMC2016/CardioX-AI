@@ -52,8 +52,6 @@ def discovery_cds_services(request):
     })
 
 
-
-    
 @csrf_exempt 
 def check_id(request,app_id):
     
@@ -73,7 +71,7 @@ def check_id(request,app_id):
             body += chunk  
         decoded_body = body.decode("utf-8")  
         json_data = json.loads(decoded_body)
-        
+        dp.save_to_database(json_data)
         dp.extract_json_data_chronological(json_data)
     
         df_patient = dp.extract_pretech_data_and_convert_values(json_data)

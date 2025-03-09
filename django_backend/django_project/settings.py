@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure--)yy9(#v(_+rp&b+2jl_w2ffxm_k2!1jvg!@6$6!s2a=xb82r9'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-URL = "92877487a67fce.lhr.life"
+URL = "8c3926b27b0a31.lhr.life"
 BASE_URL = f"https://{URL}"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", URL]
@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", URL]
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +43,6 @@ INSTALLED_APPS = [
     'bpapp',
     'rest_framework',
     'mozilla_django_oidc',
-    'daphne',  # Django ASGI server
     'channels',  # Enables WebSockets
 ]
 

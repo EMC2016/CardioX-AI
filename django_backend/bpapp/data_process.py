@@ -15,13 +15,67 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 from scipy.special import expit
+from . import models as db
 
+
+def save_to_database(data):
+    prefetch = data.get("prefetch", {})
+    current_patient, created = db.Patient.objects.get_or_create(id = prefetch.get("patient", {}).get("id"), 
+                                                     gender = prefetch.get("patient", {}).get("gender"),
+                                                     birthDate=prefetch.get("patient", {}).get("birthDate"), 
+                                                     familyName = prefetch.get("patient",{}).get("name")[0].get("family"),
+                                                     givenName = " ".join(prefetch.get("patient",{}).get("name")[0].get("given")),
+                                                     )
+    
+    
+    # Loop through prefetch data
+    for category, details in prefetch.items():
+        if isinstance(details, dict) and "entry" in details:
+            for entry in details["entry"]:
+                resource = entry.get("resource", {})
+                if resource.get("resourceType")=="Observation":
+                    timestamp = resource.get("effectiveDateTime")
+                    value = None
+                    unit = ""
+
+                    if "valueQuantity" in resource:
+                        value = resource["valueQuantity"]["value"]
+                        unit = resource["valueQuantity"].get("unit", "")
+                        observation,created = db.Observation_Quantity.objects.get_or_create(patient = current_patient, 
+                                                        observation = category,
+                                                        value = value, 
+                                                        unit = unit,
+                                                        timestamp = timestamp,
+                                                        )
+
+                    elif "valueCodeableConcept" in resource:
+                        value = resource["valueCodeableConcept"]["text"]
+                        observation,created = db.Observation_Concept.objects.get_or_create(patient = current_patient, 
+                                                        observation = category,
+                                                        value = value, 
+                                                        timestamp = timestamp,
+                                                        )
+                        
+                elif resource.get("resourceType")=="Condition":
+                    condition,created= db.Condition.objects.get_or_create(
+                        patient = current_patient,
+                        condition = category,
+                        clinical_status = entry["clinicalStatus"].get("coding")[0].get("code");
+                        timestamp = entry["onsetDateTime"]
+                    )
+                    
+                    
+
+                    
+                
+    
 
 def extract_json_data_chronological(data):
     # Extracting values and timestamps from the "prefetch" section
     extracted_data = []
     prefetch = data.get("prefetch", {})
     patient_id = prefetch.get("patient", {}).get("id")
+    
 
     # Define attributes for time-series data
     attributes = {
