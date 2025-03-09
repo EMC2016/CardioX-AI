@@ -2,6 +2,8 @@
 
 ### **AI-Powered Insights for Cardiovascular Wellness**
 
+Click here to watch the video: https://youtu.be/ovw6g39Q8z4
+
 ## **Inspiration**
 
 Cardiovascular diseases (CVDs) remain the leading cause of death worldwide, yet many cases are preventable with early risk detection and proactive management. We developed **CardioX AI** to empower individuals and healthcare providers with an AI-driven tool that not only predicts cardiovascular risk but also provides actionable insights through data visualization, intelligent reporting, and an interactive AI assistant.
