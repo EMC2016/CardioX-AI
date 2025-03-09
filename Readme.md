@@ -2,7 +2,7 @@
 
 ### **AI-Powered Insights for Cardiovascular Wellness**
 
-Click here to watch the video: https://youtu.be/ovw6g39Q8z4
+Click here to watch the video📺: https://youtu.be/ovw6g39Q8z4
 
 ## **Inspiration**
 
