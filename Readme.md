@@ -2,7 +2,7 @@
 
 ### **AI-Powered Insights for Cardiovascular Wellness**
 
-Click here to watch the video📺: https://youtu.be/ovw6g39Q8z4
+Click here to watch the video 📺 https://youtu.be/ovw6g39Q8z4
 
 ## **Inspiration**
 
@@ -10,7 +10,7 @@ Cardiovascular diseases (CVDs) remain the leading cause of death worldwide, yet 
 
 ## **What It Does**
 
-CardioX AI leverages **XGBoost** to predict cardiovascular disease risk based on 13 key factors such as age, hypertension, cholesterol levels, smoking status, and other lab test metrics. After generating a risk score, the app produces **detailed charts and analytical reports** powered by an **LLM (Large Language Model)**. Users can also interact with an **AI-powered agent** to receive personalized explanations, insights, and recommendations for cardiovascular health management.
+CardioX AI leverages **XGBoost** to predict cardiovascular disease risk based on 12 key factors such as age, hypertension, cholesterol levels, smoking status, and other lab test metrics. After generating a risk score, the app produces **detailed charts and analytical reports** powered by an **LLM (Large Language Model)**. Users can also interact with an **AI-powered agent** to receive personalized explanations, insights, and recommendations for cardiovascular health management.
 
 ## **How We Built It**
 
@@ -36,7 +36,7 @@ The frontend was developed using **Vite and React** for a fast and responsive us
 
 ### **Prediction Model**
 
-- **Trained XGBoost model** using **NIH NHANES (2017-2020) data** with 13 key attributes to assess cardiovascular risk.
+- **Trained XGBoost model** using **NIH NHANES (2017-2020) data** with 12 key attributes to assess cardiovascular risk.
 
 ## **Challenges We Ran Into**
 
@@ -49,7 +49,7 @@ The frontend was developed using **Vite and React** for a fast and responsive us
 
 ## **Accomplishments That We're Proud Of**
 
-✅ Integratoin **CDS hooks with SMART App** based on Django and Vite framework.
+✅ Integratoin **CDS hooks with SMART App** based on Django and Vite framework.  
 ✅ Successfully **trained and deployed** an **XGBoost model** for cardiovascular risk prediction.  
 ✅ Implemented **dynamic report generation** using an **LLM** for clear and actionable insights.  
 ✅ Developed an **AI-powered conversational assistant** to improve user engagement and understanding.  
