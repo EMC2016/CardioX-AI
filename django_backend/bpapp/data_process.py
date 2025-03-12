@@ -1,31 +1,33 @@
-from django.shortcuts import render
-import json
-from django.views.decorators.csrf import csrf_exempt
-from urllib.parse import urlencode
-from django.http import HttpResponseRedirect, HttpResponseBadRequest
-from django.shortcuts import redirect
-from django.conf import settings
-import pkce
-import secrets
-import requests
-from django.http import JsonResponse, HttpResponseBadRequest
-import jwt
-from datetime import datetime, timedelta
+from datetime import datetime
 import pandas as pd
-import numpy as np
-import xgboost as xgb
-from scipy.special import expit
 from . import models as db
+from django.db.models import Max
 
+
+DEFAULT_VALUES = {
+    'BMI': 25.55,
+    'HDL': 51.0,
+    'Triglycerides': 83.5,
+    'Glucose': 101.0,
+    'HbA1c': 5.5,
+    'SerumCreatinine': 0.76,
+    'ALT': 17.0,
+    'AST': 19.0
+}
+
+def delete_patient(patient_id):
+    patient = db.Patient.objects.get(id = patient_id)
+    patient.delete()
 
 def save_to_database(data):
     prefetch = data.get("prefetch", {})
-    current_patient, created = db.Patient.objects.get_or_create(id = prefetch.get("patient", {}).get("id"), 
+    current_patient, created = db.Patient.objects.update_or_create(id = prefetch.get("patient", {}).get("id"), 
                                                      gender = prefetch.get("patient", {}).get("gender"),
                                                      birthDate=prefetch.get("patient", {}).get("birthDate"), 
                                                      familyName = prefetch.get("patient",{}).get("name")[0].get("family"),
                                                      givenName = " ".join(prefetch.get("patient",{}).get("name")[0].get("given")),
                                                      )
+    
     
     
     # Loop through prefetch data
@@ -37,12 +39,14 @@ def save_to_database(data):
                     timestamp = resource.get("effectiveDateTime")
                     value = None
                     unit = ""
+                    
+                    ob_type, created = db.ObservationType.objects.get_or_create(name=category)
 
                     if "valueQuantity" in resource:
                         value = resource["valueQuantity"]["value"]
                         unit = resource["valueQuantity"].get("unit", "")
-                        observation,created = db.Observation_Quantity.objects.get_or_create(patient = current_patient, 
-                                                        observation = category,
+                        observation,created = db.ObservationQuantity.objects.update_or_create(patient = current_patient, 
+                                                        observation = ob_type,
                                                         value = value, 
                                                         unit = unit,
                                                         timestamp = timestamp,
@@ -50,67 +54,114 @@ def save_to_database(data):
 
                     elif "valueCodeableConcept" in resource:
                         value = resource["valueCodeableConcept"]["text"]
-                        observation,created = db.Observation_Concept.objects.get_or_create(patient = current_patient, 
-                                                        observation = category,
+                        observation,created = db.ObservationConcept.objects.update_or_create(patient = current_patient, 
+                                                        observation = ob_type,
                                                         value = value, 
                                                         timestamp = timestamp,
                                                         )
                         
                 elif resource.get("resourceType")=="Condition":
-                    condition,created= db.Condition.objects.get_or_create(
+                    condition_type,created = db.ConditionType.objects.get_or_create(name = category)
+                    condition,created= db.Condition.objects.update_or_create(
                         patient = current_patient,
-                        condition = category,
-                        clinical_status = entry["clinicalStatus"].get("coding")[0].get("code");
-                        timestamp = entry["onsetDateTime"]
+                        condition = condition_type,
+                        clinical_status = resource.get("clinicalStatus", {}).get("coding", [{}])[0].get("code"),
+                        timestamp = resource.get("onsetDateTime")
                     )    
     
+def display_patient_data(patient_id):
+    try:
+        patient = db.Patient.objects.get(id=patient_id)
+        print(f"\n📌 Patient Details")
+        print(f"ID: {patient.id}")
+        print(f"Family Name: {patient.familyName}")
+        givenName_list = patient.givenName.split(" ")
+        print(f"Given Name: {givenName_list}")
+        print(f"Gender: {patient.gender}")
+        print(f"Birth Date: {patient.birthDate}")
 
+        print("\n📊 Value Observations:")
+        observations_quantity = db.ObservationQuantity.objects.filter(patient=patient).order_by("timestamp")
 
-def extract_observation_value(entry):
-    """Extracts a value from an Observation or checks Condition existence."""
-    if not entry or "entry" not in entry or not entry["entry"]:
-        return None  
-    resource = entry["entry"][0]["resource"]
+        grouped_observations_quantity = {}
+        for obs in observations_quantity:
+            grouped_observations_quantity.setdefault(obs.observation.name, []).append(obs)
 
-    # If it's an Observation, extract the numeric value
-    if resource["resourceType"] == "Observation":
-        return resource.get("valueQuantity", {}).get("value", None)
+        # Print grouped data
+        for obs_type, obs_list in grouped_observations_quantity.items():
+            for obs in obs_list:
+                print(obs) 
+              
+        print("\n📊 Concept Observations:")
+        
+        observations_concept = db.ObservationConcept.objects.filter(patient=patient).order_by("timestamp")
 
-    # If it's a Condition, return True (indicating presence of the condition)
-    if resource["resourceType"] == "Condition":
-        return True  # Indicates the patient has hypertension
+        grouped_observations_concept = {}
+        for obs in observations_concept:
+            grouped_observations_concept.setdefault(obs.observation.name, []).append(obs)
 
-    return None  # Default case
+        # Print grouped data
+        for obs_type, obs_list in grouped_observations_concept.items():
+            for obs in obs_list:
+                print(obs) 
+
+        print("\n🩺 Conditions:")
+        conditions = db.Condition.objects.filter(patient=patient).order_by("timestamp")
+
+        grouped_conditions = {}
+        for obs in conditions:
+            grouped_conditions.setdefault(obs.condition.name, []).append(obs)
+
+        # Print grouped data
+        for obs_type, obs_list in grouped_conditions.items():
+            for obs in obs_list:
+                print(obs) 
+        
+    except db.Patient.DoesNotExist:
+        print("Patient not found.")
+        
+ 
+def get_latest_observation_quantity(patient_id, observation_name):
+    obs = db.ObservationQuantity.objects.filter(patient_id=patient_id,observation__name=observation_name).latest("timestamp")
+    return obs.value if obs else None
     
+def get_latest_observation_concept(patient_id, observation_name):
+    obs = db.ObservationConcept.objects.filter(patient_id=patient_id,observation__name=observation_name).latest("timestamp")
+    return obs.value if obs else None
+ 
+
+def get_latest_condition(patient_id, condition_name):
+    cdt =  db.Condition.objects.filter(patient_id=patient_id,condition__name=condition_name).latest("timestamp")
+    return cdt.get_clinical_status_display() if cdt else None
     
-def extract_pretech_data_and_convert_values(json_data):
-    # Extract observations in the same order as them in XGBoost
-    
-    prefetch = json_data.get("prefetch", {})
-    patient_id = prefetch.get("patient", {}).get("id")
+def extract_latest_data(patient_id):
+    patient = db.Patient.objects.get(id=patient_id)
     
     data = {
-        "PatientID": patient_id,
-        "Age": prefetch.get("patient", {}).get("birthDate"),  
-        "Gender": prefetch.get("patient", {}).get("gender"),
-        "BMI": extract_observation_value(prefetch.get("bmi")),
-        "Hypertension": 1 if extract_observation_value(prefetch.get("hypertension")) else 0,
-        "Glucose": extract_observation_value(prefetch.get("fasting_glucose")),
-        "HDL": extract_observation_value(prefetch.get("hdl")),
-        "Triglycerides": extract_observation_value(prefetch.get("triglycerides")),
-        "Smoking": prefetch.get("smoking_status", {}).get("entry", [{}])[0].get("resource", {}).get("valueCodeableConcept", {}).get("coding", [{}])[0].get("display", None),
-        "HbA1c": extract_observation_value(prefetch.get("hba1c")),
-        "SerumCreatinine": extract_observation_value(prefetch.get("serum_creatinine")),
-        "ALT": extract_observation_value(prefetch.get("alt")),
-        "AST": extract_observation_value(prefetch.get("ast")),
+        
+        "Age": patient.birthDate,  
+        "Gender": patient.gender,
+        
+        "BMI": get_latest_observation_quantity(patient_id,"bmi"),
+        "Hypertension": get_latest_condition(patient_id,"hypertension")=="Active",
+        "Glucose": get_latest_observation_quantity(patient_id,"fasting_glucose"),
+        "HDL":get_latest_observation_quantity(patient_id,"hdl"),
+        "Triglycerides": get_latest_observation_quantity(patient_id,"triglycerides"),
+        "Smoking": get_latest_observation_concept(patient_id,"smoking_status"),
+        "HbA1c": get_latest_observation_quantity(patient_id,"hba1c"),
+        "SerumCreatinine": get_latest_observation_quantity(patient_id,"serum_creatinine"),
+        "ALT": get_latest_observation_quantity(patient_id,"alt"),
+        "AST": get_latest_observation_quantity(patient_id,"ast"),
         
     }
     
             # Convert birthdate to age (assuming today's date)
     if data["Age"]:
-        from datetime import datetime
-        birth_year = int(data["Age"].split("-")[0])  # Extract year from birthdate
-        data["Age"] = datetime.today().year - birth_year
+        data["Age"] = datetime.today().year - data["Age"].year
+    if data["Hypertension"]=="Resolved":
+        data["Hypertension"]=0
+    else:
+        data["Hypertension"]=1
         
     smoking_map = {
         "Never smoked tobacco (finding)": 0,
@@ -123,32 +174,16 @@ def extract_pretech_data_and_convert_values(json_data):
     data["Gender"] = gender_map.get(data["Gender"],0)
     
     
-    patient_info = {"Patient ID": patient_id, "Age": data["Age"] , "Gender": data["Gender"] , "Hypertension": data["Hypertension"] ,"Smoking":data["Smoking"]}
-    df_patient_info = pd.DataFrame([patient_info])
-    csv_filename_info = f"/Users/qingxiaochen/Documents/Program/Hackathon/MedAI/meldrx_app/medlrx_project/vite_app/src/assets/patient_info_{patient_id}.csv"
-    df_patient_info.to_csv(csv_filename_info, index=False)
-    print(f"Patient info saved to {csv_filename_info}")
-
-
-    df_patient = pd.DataFrame([data])       
-    csv_filename = "patient_data.csv"
-    df_patient.to_csv(csv_filename, mode='a', index=False, header=not pd.io.common.file_exists(csv_filename))
-    print(f"✅ Patient data saved to {csv_filename}")
+    for attr,val in data.items():
+        if val is None:
+            data[attr] = DEFAULT_VALUE[attr]
+    
+    
+    
+    df_patient = pd.DataFrame([data])
+    print(df_patient)
+   
     
     return df_patient
 
     
-def fill_NaN_and_drop_patientId(df_patient):
-    csv_file_path = "/Users/qingxiaochen/Documents/Program/Hackathon/MedAI/meldrx_app/medlrx_project/XGBoostModel/default_values.csv"
-    # Load CSV into a DataFrame
-    df_loaded = pd.read_csv(csv_file_path)
-
-    # Convert first row to dictionary
-    default_values = df_loaded.iloc[0].to_dict()
-    # Convert to Pandas DataFrame
-    
-    # Assuming `df` is the DataFrame containing these columns
-    df_patient.fillna(default_values, inplace=True)
-    df_patient = df_patient.drop(columns=["PatientID"])
-    
-    return df_patient
