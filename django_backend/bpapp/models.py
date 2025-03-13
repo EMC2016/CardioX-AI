@@ -6,6 +6,7 @@ class Patient(models.Model):
     birthDate = models.DateField(null=True, blank=True)
     familyName = models.CharField(max_length=20, null=True, blank=True)
     givenName = models.CharField(max_length=50,null = True, blank = True)
+    jsonFilePath = models.CharField(max_length=250,null = True, blank = True)
   
     # create rawdata attributes to store original json data.
        

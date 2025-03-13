@@ -2,6 +2,9 @@ from datetime import datetime
 import pandas as pd
 from . import models as db
 from django.db.models import Max
+import json
+import os
+from django.conf import settings
 
 
 DEFAULT_VALUES = {
@@ -21,12 +24,24 @@ def delete_patient(patient_id):
 
 def save_to_database(data):
     prefetch = data.get("prefetch", {})
-    current_patient, created = db.Patient.objects.update_or_create(id = prefetch.get("patient", {}).get("id"), 
-                                                     gender = prefetch.get("patient", {}).get("gender"),
-                                                     birthDate=prefetch.get("patient", {}).get("birthDate"), 
-                                                     familyName = prefetch.get("patient",{}).get("name")[0].get("family"),
-                                                     givenName = " ".join(prefetch.get("patient",{}).get("name")[0].get("given")),
-                                                     )
+    patient_id = prefetch.get("patient", {}).get("id")
+    
+    """Store json file"""
+    backup_path = os.path.join(settings.MEDIA_ROOT,"json_backups")
+    json_file_path = os.path.join(backup_path,f"patient_{patient_id}.json")
+    with open(json_file_path,"w") as json_file:
+        json.dump(data,json_file)
+    
+    
+    current_patient, created = db.Patient.objects.update_or_create(id = patient_id, 
+            defaults = {
+            "gender": prefetch.get("patient", {}).get("gender"),
+            "birthDate" : prefetch.get("patient", {}).get("birthDate"), 
+            "familyName" : prefetch.get("patient",{}).get("name")[0].get("family"),
+            "givenName" : " ".join(prefetch.get("patient",{}).get("name")[0].get("given")),
+            "jsonFilePath" : json_file_path,
+            } 
+            )
     
     
     
@@ -40,7 +55,7 @@ def save_to_database(data):
                     value = None
                     unit = ""
                     
-                    ob_type, created = db.ObservationType.objects.get_or_create(name=category)
+                    ob_type, created = db.ObservationType.objects.update_or_create(name=category)
 
                     if "valueQuantity" in resource:
                         value = resource["valueQuantity"]["value"]
@@ -61,7 +76,7 @@ def save_to_database(data):
                                                         )
                         
                 elif resource.get("resourceType")=="Condition":
-                    condition_type,created = db.ConditionType.objects.get_or_create(name = category)
+                    condition_type,created = db.ConditionType.objects.update_or_create(name = category)
                     condition,created= db.Condition.objects.update_or_create(
                         patient = current_patient,
                         condition = condition_type,
