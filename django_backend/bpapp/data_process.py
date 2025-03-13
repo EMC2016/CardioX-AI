@@ -43,8 +43,6 @@ def save_to_database(data):
             } 
             )
     
-    
-    
     # Loop through prefetch data
     for category, details in prefetch.items():
         if isinstance(details, dict) and "entry" in details:

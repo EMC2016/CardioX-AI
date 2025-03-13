@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure--)yy9(#v(_+rp&b+2jl_w2ffxm_k2!1jvg!@6$6!s2a=xb82r9'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-URL = "7075a8d75bc6dc.lhr.life"
+URL = "a55fc84052d754.lhr.life"
 BASE_URL = f"https://{URL}"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", URL]
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bpapp',
-    'rest_framework',
+    'rest_framework',# REST apis
     'mozilla_django_oidc',
     'channels',  # Enables WebSockets
 ]
