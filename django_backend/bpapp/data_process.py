@@ -151,7 +151,6 @@ def get_latest_condition(patient_id, condition_name):
     
 def extract_latest_data(patient_id):
     patient = db.Patient.objects.get(id=patient_id)
-    
     data = {
         
         "Age": patient.birthDate,  
@@ -192,8 +191,6 @@ def extract_latest_data(patient_id):
     for attr,val in data.items():
         if val is None:
             data[attr] = DEFAULT_VALUE[attr]
-    
-    
     
     df_patient = pd.DataFrame([data])
     print(df_patient)
