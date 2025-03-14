@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure--)yy9(#v(_+rp&b+2jl_w2ffxm_k2!1jvg!@6$6!s2a=xb82r9'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-URL = "a55fc84052d754.lhr.life"
+URL = "a6a5d0b779ab1c.lhr.life"
 BASE_URL = f"https://{URL}"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", URL]
@@ -78,8 +78,12 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4434",
-    "https://a55fc84052d754.lhr.life",
+    BASE_URL,
 ]
+
+CORS_ALLOW_HEADERS = ['*']
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+
 AUTHENTICATION_BACKENDS = (
     'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
 )

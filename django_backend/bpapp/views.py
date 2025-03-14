@@ -5,10 +5,13 @@ import xgboost as xgb
 from scipy.special import expit
 from . import data_process as dp  
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 from .models import Patient
 from .serializers import PatientSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+
+
 
 
 def discovery_cds_services(request):
@@ -132,6 +135,7 @@ def check_id(request,app_id):
 """This is to send patient data to Vite."""
 
 @api_view(["GET"])
+@permission_classes([AllowAny])  # ✅ Apply permissions correctly
 def get_patient_by_id(request, patient_id):
     patient = get_object_or_404(Patient, id=patient_id)
     serializer = PatientSerializer(patient)
