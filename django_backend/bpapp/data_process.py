@@ -188,7 +188,7 @@ def extract_latest_data(patient_id):
     
     for attr,val in data.items():
         if val is None:
-            data[attr] = DEFAULT_VALUE[attr]
+            data[attr] = DEFAULT_VALUES[attr]
     
     df_patient = pd.DataFrame([data])
     print(df_patient)

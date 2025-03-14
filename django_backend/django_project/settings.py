@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',# REST apis
     'mozilla_django_oidc',
     'channels',  # Enables WebSockets
+    'corsheaders',
 ]
 
 ASGI_APPLICATION = "django_project.asgi.application"
@@ -71,9 +72,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',#load static files for gunicorn.
+    "corsheaders.middleware.CorsMiddleware",
+
 ]
 
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4434",
+    "https://a55fc84052d754.lhr.life",
+]
 AUTHENTICATION_BACKENDS = (
     'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
 )
