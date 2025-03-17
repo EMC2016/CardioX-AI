@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import * as d3 from "d3";
-import CreateBarChart from "./CreateBarChart"; // Import your D3 chart component
+import { CreateBarChart, CreateLegend } from "./CreateBarChart"; // Import your D3 chart component
 
-const URL = "a6a5d0b779ab1c.lhr.life";
+const URL = "350436fdd87e85.lhr.life";
 
 const normalRangeFemale = {
   bmi: { min: 18.5, max: 24.9 },
@@ -146,16 +146,29 @@ function FetchAndVisualize({ patientId }) {
       <hr />
 
       {/* ✅ Render charts dynamically */}
-      {Object.entries(groupedData).map(([category, data]) => (
-        <div key={category}>
-          <h3>{category}</h3>
-          <CreateBarChart
-            data={data}
-            category={category}
-            normalRange={normalRange}
-          />
-        </div>
-      ))}
+      <div>
+        <CreateLegend />
+      </div>
+      <div
+        style={{
+          maxHeight: "600px",
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {Object.entries(groupedData).map(([category, data]) => (
+          <div key={category}>
+            <h4>{category}</h4>
+
+            <CreateBarChart
+              data={data}
+              category={category}
+              normalRange={normalRange}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
